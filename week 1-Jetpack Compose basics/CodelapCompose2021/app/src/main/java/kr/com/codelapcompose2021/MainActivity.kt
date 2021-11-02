@@ -3,15 +3,12 @@ package kr.com.codelapcompose2021
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,7 +24,7 @@ class MainActivity : ComponentActivity() {
             CodelapCompose2021Theme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    MyApp()
+                    MyApp2()
                 }
             }
         }
@@ -42,20 +39,26 @@ class MainActivity : ComponentActivity() {
     modifier는 UI 요소에 상위 레이아웃 내에서 레이아웃, 표시 또는 동작하는 방법을 알려줍니다. */
 @Composable
 private fun Greeting(name: String) {
+    // Expanding the item 하는 부분
+    val expanded = remember { mutableStateOf(false) }
+    val extraPadding = if (expanded.value) 48.dp else 0.dp
 
     Surface(
         color = MaterialTheme.colors.primary,
         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
     ) {
         Row(modifier = Modifier.padding(24.dp)) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier
+                .weight(1f)
+                .padding(bottom = extraPadding)
+            ) {
                 Text(text = "Hello, ")
                 Text(text = name)
             }
             OutlinedButton(
-                onClick = { /* TODO */ }
+                onClick = { expanded.value = !expanded.value }
             ) {
-                Text("Show more")
+                Text(if (expanded.value) "Show less" else "Show more")
             }
         }
     }
@@ -66,7 +69,7 @@ private fun Greeting(name: String) {
 @Composable
 fun DefaultPreview() {
     CodelapCompose2021Theme {
-        Greeting("Android")
+        MyApp2()
     }
 }
 
@@ -87,11 +90,107 @@ fun DefaultPreview() {
     Box : 프레임레이아웃과 비슷 */
 
 @Composable
-fun MyApp(names: List<String> = listOf("World", "Compose")) {
+fun MyApp2(names: List<String> = listOf("World", "Compose")) {
+    // 'state hoisting' 함
+    var shouldShowOnboarding by remember { mutableStateOf(true) }
+
+    if (shouldShowOnboarding) {
+        OnboardingScreen(onContinueClicked = { shouldShowOnboarding = false })
+    } else {
+        Greetings()
+    }
+
+}
+
+
+/*  7. State In Compose
+    - remember :
+    - mutableStateOf :
+
+    초기 Composition으로 처음 뷰를 구성하게 되고 각각의 뷰는 데이터가 변경될 때
+    ReComposition이라는 것을 통해서 변경된 뷰만 업데이트를 하게됩니다.
+
+    이때 '데이터가 변경될 때'의 의미는 State<T>가 변경될 때 Remember 컴포저블로 객체 저장
+    수정될 때 mutableStateOf<T>로 접근해서 데이터를 변경하게 되면서 갱신됨
+
+    Compose 상태관리 : https://developer.android.com/jetpack/compose/state?hl=ko
+    Compose 이해 : https://developer.android.com/jetpack/compose/mental-model?hl=ko
+ */
+
+
+/*  8. State hoisting
+    Composable 함수에서 다른 여러 함수에서 읽히거나 수정되는 state는 공통 조상에 있어야합니다.
+    이런 프로세스를 'state hoisting' 이라고 부릅니다.
+    반대로 컴포저블의 부모에 의해 제어될 필요가 없는 상태는 hoisting되면 안됩니다.
+
+
+    'state hoisting'을 하게 되면 얻는 이점
+    - 상태 중복을 피함
+    - 버그 방지
+    - 컴포저블 재사용에 도움
+    - 테스트를 좀 더 쉽게 만듦
+ */
+
+@Composable
+private fun Greetings(names: List<String> = listOf("World", "Compose")) {
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
         for (name in names) {
             Greeting(name = name)
         }
     }
 }
+@Composable
+fun OnboardingScreen(onContinueClicked: () -> Unit) {
 
+//     TODO: This state should be hoisted
+//    var shouldShowOnboarding by remember { mutableStateOf(true) }
+
+    Surface {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Welcome to the Basics Codelab!")
+            Button(
+                modifier = Modifier.padding(vertical = 24.dp),
+                onClick = onContinueClicked
+//                꼭 필요한 상황이 아니라면 이런식으로 상태를 가지고 있는 것 보다는
+//                부모에 의해 컨트롤 되는게(state hoisting) 많은 이점을 가지고 있습니다.
+//                onClick = { shouldShowOnboarding = false }
+            ) {
+                Text("Continue")
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 320, heightDp = 320)
+@Composable
+fun OnboardingPreview() {
+    CodelapCompose2021Theme {
+        OnboardingScreen(onContinueClicked = {})
+    }
+}
+
+
+/*  9. Createing a performant lazy list
+    (Note) LazyColumn와 LazyRow는 RecyclerView와 동등합니다. */
+
+@Composable
+private fun LazyGreetings(names: List<String> = List(1000) { "$it" } ) {
+    LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
+        // (Note) androidx.compose.foundation.lazy.items로 import 되어야합니다.
+        items(items = names) { name ->
+            Greeting(name = name)
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 320, heightDp = 320)
+@Composable
+fun LazyGreetingsPreview() {
+    CodelapCompose2021Theme {
+        LazyGreetings()
+    }
+}
