@@ -3,6 +3,9 @@ package kr.com.codelapcompose2021
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,8 +28,8 @@ class MainActivity : ComponentActivity() {
             CodelapCompose2021Theme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    MyApp2()
-//                    LazyGreetings()
+//                    MyApp2()
+                    LazyGreetings()
                 }
             }
         }
@@ -43,7 +46,16 @@ class MainActivity : ComponentActivity() {
 private fun Greeting(name: String) {
     // Expanding the item 하는 부분
     val expanded = remember { mutableStateOf(false) }
-    val extraPadding = if (expanded.value) 48.dp else 0.dp
+
+//    val extraPadding = if (expanded.value) 48.dp else 0.dp
+    // Animating list(리스트에 애니매이션 적용)
+    val extraPadding by animateDpAsState(
+        if (expanded.value) 48.dp else 0.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
 
     Surface(
         color = MaterialTheme.colors.primary,
@@ -53,7 +65,7 @@ private fun Greeting(name: String) {
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(bottom = extraPadding)
+                    .padding(bottom = extraPadding.coerceAtLeast(0.dp))
             ) {
                 Text(text = "Hello, ")
                 Text(text = name)
