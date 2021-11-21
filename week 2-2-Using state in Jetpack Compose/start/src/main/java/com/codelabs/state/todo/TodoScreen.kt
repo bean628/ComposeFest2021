@@ -260,6 +260,16 @@ fun TodoItemEntryInput(onItemComplete: (TodoItem) -> Unit) {
     )
 }
 
+
+/*
+    [State Hoisting 할 때 어디로 가야하는지 도움이 되는 세가지 규칙]
+    1. State는 State를 사용하는 모든 Composable의 최소 공통 상위 항목으로
+    2. State는 최소한 수정할 수 있는 최고 수준으로
+    3. 동일한 이벤트에 대한 응답으로 두 State가 변경되면 함께
+
+
+ */
+
 // TodoItemInput을 stateful과 2개로 stateless로 나눔
 @ExperimentalComposeUiApi
 @Composable

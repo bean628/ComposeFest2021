@@ -24,12 +24,14 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.ExperimentalComposeUiApi
 import com.codelabs.state.ui.StateCodelabTheme
 
 class TodoActivity : AppCompatActivity() {
 
     val todoViewModel by viewModels<TodoViewModel>()
 
+    @ExperimentalComposeUiApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -42,13 +44,19 @@ class TodoActivity : AppCompatActivity() {
     }
 }
 
+@ExperimentalComposeUiApi
 @Composable
 private fun TodoActivityScreen(todoViewModel: TodoViewModel) {
-    // todo아이템 observing
-    val items: List<TodoItem> by todoViewModel.todoItems.observeAsState(listOf())
+    /* todo아이템 observing, LiveData를 mutableState로 대체해서 제거함 */
+//    val items: List<TodoItem> by todoViewModel.todoItems.observeAsState(listOf())
+//    TodoScreen(
+//        items = items,
+//        onAddItem = { todoViewModel.addItem(it) }, // onAddItem = todoViewModel::addItem, 메서드 참조 표현식도 가능
+//        onRemoveItem = { todoViewModel.removeItem(it) }
+//    )
     TodoScreen(
-        items = items,
-        onAddItem = { todoViewModel.addItem(it) }, // onAddItem = todoViewModel::addItem, 메서드 참조 표현식도 가능 
-        onRemoveItem = { todoViewModel.removeItem(it) }
+        items = todoViewModel.todoItems,
+        onAddItem = todoViewModel::addItem,
+        onRemoveItem = todoViewModel::removeItem
     )
 }
