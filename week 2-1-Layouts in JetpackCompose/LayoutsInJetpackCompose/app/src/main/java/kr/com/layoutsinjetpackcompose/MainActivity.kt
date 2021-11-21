@@ -1,12 +1,27 @@
 package kr.com.layoutsinjetpackcompose
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import kr.com.layoutsinjetpackcompose.ui.theme.LayoutsInJetpackComposeTheme
 
-// https://developer.android.com/codelabs/jetpack-compose-layouts#0
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContent {
+            LayoutsInJetpackComposeTheme {
+                PhotographerCard()
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
+    LayoutsInJetpackComposeTheme {
+        PhotographerCard()
     }
 }
