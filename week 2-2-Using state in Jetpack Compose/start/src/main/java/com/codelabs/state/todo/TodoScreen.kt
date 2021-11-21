@@ -60,8 +60,7 @@ fun TodoScreen(
     onRemoveItem: (TodoItem) -> Unit,
     onStartEdit: (TodoItem) -> Unit,
     onEditItemChange: (TodoItem) -> Unit,
-    onEditDone: () -> Unit
-
+    onEditDone: () -> Unit,
 ) {
     Column {
 //        TodoItemInputBackground(elevate = true, modifier = Modifier.fillMaxWidth()) {
@@ -114,7 +113,7 @@ fun TodoScreen(
                     TodoRow(
                         todo,
                         { onStartEdit(it) },
-                        Modifier.fillParentMaxWidth()
+                        Modifier.fillParentMaxWidth(),
                     )
                 }
             }
@@ -145,7 +144,7 @@ fun TodoRow(
     todo: TodoItem,
     onItemClicked: (TodoItem) -> Unit,
     modifier: Modifier = Modifier,
-    iconAlpha: Float = remember(todo.id) { randomTint() },
+    iconAlpha: Float = remember(todo.id) { randomTint() }, // ViewModel 로 hoisting 해야 아이템을 수정 저장해도 tint 값이 안바뀜
 ) {
     Row(
         modifier = modifier
@@ -195,7 +194,7 @@ fun TodoRow(
  */
 
 
-private fun randomTint(): Float {
+internal fun randomTint(): Float {
     return Random.nextFloat().coerceIn(0.3f, 0.9f)
 }
 
@@ -266,28 +265,28 @@ var value by remember { mutableStateOf(default) }
 val (value, setValue) = remember { mutableStateOf(default) }
  */
 
-@ExperimentalComposeUiApi
-@Composable
-fun TodoItemInput(onItemComplete: (TodoItem) -> Unit) {
-
-    val (text, setText) = remember { mutableStateOf("") }
-    val (icon, setIcon) = remember { mutableStateOf(TodoIcon.Default) }
-    val iconsVisible = text.isNotBlank()
-    val submit = {
-        onItemComplete(TodoItem(text, icon))
-        setIcon(TodoIcon.Default)
-        setText("")
-    }
-    // onItemComplete is an event will fire when an item is completed by the user
-    TodoItemInput(
-        text = text,
-        onTextChange = setText,
-        icon = icon,
-        onIconChange = setIcon,
-        submit = submit,
-        iconsVisible = iconsVisible
-    )
-}
+//@ExperimentalComposeUiApi
+//@Composable
+//fun TodoItemInput(onItemComplete: (TodoItem) -> Unit) {
+//
+//    val (text, setText) = remember { mutableStateOf("") }
+//    val (icon, setIcon) = remember { mutableStateOf(TodoIcon.Default) }
+//    val iconsVisible = text.isNotBlank()
+//    val submit = {
+//        onItemComplete(TodoItem(text, icon))
+//        setIcon(TodoIcon.Default)
+//        setText("")
+//    }
+//    // onItemComplete is an event will fire when an item is completed by the user
+//    TodoItemInput(
+//        text = text,
+//        onTextChange = setText,
+//        icon = icon,
+//        onIconChange = setIcon,
+//        submit = submit,
+//        iconsVisible = iconsVisible
+//    )
+//}
 
 //  TodoItemInput을 stateful과 2개로 stateless로 나눔
 @ExperimentalComposeUiApi
@@ -295,7 +294,9 @@ fun TodoItemInput(onItemComplete: (TodoItem) -> Unit) {
 fun TodoItemEntryInput(onItemComplete: (TodoItem) -> Unit) {
     val (text, setText) = remember { mutableStateOf("") }
     val (icon, setIcon) = remember { mutableStateOf(TodoIcon.Default) }
+
     val iconsVisible = text.isNotBlank()
+
     val submit = {
         onItemComplete(TodoItem(text, icon))
         setIcon(TodoIcon.Default)
@@ -309,7 +310,9 @@ fun TodoItemEntryInput(onItemComplete: (TodoItem) -> Unit) {
         onIconChange = setIcon,
         submit = submit,
         iconsVisible = iconsVisible
-    )
+    ) { // slot을 이용하여 추가 함
+        TodoEditButton(onClick = submit, text = "Add", enabled = iconsVisible)
+    }
 }
 
 
@@ -372,7 +375,7 @@ fun TodoItemInput(
 @ExperimentalComposeUiApi
 @Preview
 @Composable
-fun PreviewTodoItemInput() = TodoItemInput(onItemComplete = { })
+fun PreviewTodoItemInput() = TodoItemEntryInput(onItemComplete = { })
 
 
 @ExperimentalComposeUiApi
@@ -388,12 +391,78 @@ fun TodoItemInlineEditor(
     icon = item.icon,
     onIconChange = { onEditItemChange(item.copy(icon = it)) },
     submit = onEditDone,
-    iconsVisible = true
+    iconsVisible = true,
+    buttonSlot = {
+        Row {
+            val shrinkButtons = Modifier.widthIn(20.dp)
+            TextButton(onClick = onEditDone, modifier = shrinkButtons) {
+                Text(
+                    text = "\uD83D\uDCBE", // floppy disk
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.width(30.dp)
+                )
+            }
+            TextButton(onClick = onRemoveItem, modifier = shrinkButtons) {
+                Text(
+                    text = "❌",
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.width(30.dp)
+                )
+            }
+        }
+    }
 )
 
 /*  copy(task = it) 및 copy(icon = it)이란 무엇입니까?
  이러한 함수는 데이터 클래스의 값에 대해 Kotlin에서 자동 생성됩니다.
  copy를 호출하면 지정된 매개변수가 변경된 데이터 클래스의 복사본이 만들어집니다.
  */
+
+
+/* [Use slots to pass sections of the screen]
+    슬롯은 호출자가 화면의 섹션을 설명할 수 있도록 하는 구성 가능한 함수에 대한 매개변수입니다.
+    @Composable() -> Unit 유형의 매개변수를 사용하여 슬롯을 선언하십시오.
+ */
+
+
+@Composable
+fun TodoItemInput(
+    text: String,
+    onTextChange: (String) -> Unit,
+    icon: TodoIcon,
+    onIconChange: (TodoIcon) -> Unit,
+    submit: () -> Unit,
+    iconsVisible: Boolean,
+    buttonSlot: @Composable () -> Unit
+) {
+    Column {
+        Row(
+            Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp)
+        ) {
+            TodoInputText(
+                text,
+                onTextChange,
+                Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
+                submit
+            )
+
+            // New code: Replace the call to TodoEditButton with the content of the slot
+            Spacer(modifier = Modifier.width(8.dp))
+            Box(Modifier.align(Alignment.CenterVertically)) { buttonSlot() }
+            // End new code
+
+        }
+        if (iconsVisible) {
+            AnimatedIconRow(icon, onIconChange, Modifier.padding(top = 8.dp))
+        } else {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
 
 
