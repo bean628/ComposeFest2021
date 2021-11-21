@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -84,7 +85,12 @@ fun TodoScreen(
  * @param modifier modifier for this element
  */
 @Composable
-fun TodoRow(todo: TodoItem, onItemClicked: (TodoItem) -> Unit, modifier: Modifier = Modifier) {
+fun TodoRow(
+    todo: TodoItem,
+    onItemClicked: (TodoItem) -> Unit,
+    modifier: Modifier = Modifier,
+    iconAlpha: Float = remember(todo.id) { randomTint() },
+) {
     Row(
         modifier = modifier
             .clickable { onItemClicked(todo) }
@@ -92,12 +98,46 @@ fun TodoRow(todo: TodoItem, onItemClicked: (TodoItem) -> Unit, modifier: Modifie
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(todo.task)
+
+        // (문제) 아이템을 추가할 때 마다 recomposition에 의해 계속 바뀜
+//        val iconAlpha = randomTint() // 틴트 색깔을 랜덤하게 변경한다.
+        // (해결) remember 를 이용해서 저장합니다. // 추가될때 기존 추가된 tint 값이 변하지 않음
+        //        remember 값을 제어 가능하게 만들기 위해서 매개변수로 만들고 기본값을 넣음
+        // (문제2) 아이템을 많이 넣어 스크롤을 하면 다시 tint 색이 바뀌는 문제 발견
+//        val iconAlpha = remember(todo.id) { randomTint() }
+
         Icon(
             imageVector = todo.icon.imageVector,
+            tint = LocalContentColor.current.copy(alpha = iconAlpha),
             contentDescription = stringResource(id = todo.icon.contentDescription)
         )
     }
 }
+
+/*  [LocalContentColor]
+    LocalContentColor는 아이콘 및 타이포그래피와 같은 콘텐츠에 대해 선호하는 색상을 제공합니다.
+    배경을 그리는 Surface와 같은 컴포저블에 의해 변경됩니다.
+
+    [Recomposition]
+    Recomposition이란?
+    데이터가 변경될 때 트리를 업데이트하기 위해 동일한 컴포저블을 다시 실행하는 프로세스입니다.
+
+
+    목록이 변경될 때마다 재구성 프로세스가 화면의 각 행에 대해 randomTint를 다시 호출하는 것으로
+    나타났습니다.
+
+    [문제2의 원인]
+    remember 컴포지션에 값을 저장하고 기억을 호출한 컴포저블이 제거되면 해당 값을 잊어버립니다.
+    이것은 LazyColumn과 같은 자식을 추가하고 제거하는 컴포저블 내부에 중요한 것을 저장하는 것에
+    의존해서는 안 된다는 것을 의미합니다.
+
+    예를 들어 짧은 애니메이션의 애니메이션 상태는 LazyColumn의 자식에서 기억하는 것이 안전하지만
+    Todo 작업 완료 애니메이션 같은 경우엔 스크롤시 잊어버릴 수 있기 때문에 주의해야합니다.
+
+
+
+ */
+
 
 private fun randomTint(): Float {
     return Random.nextFloat().coerceIn(0.3f, 0.9f)
