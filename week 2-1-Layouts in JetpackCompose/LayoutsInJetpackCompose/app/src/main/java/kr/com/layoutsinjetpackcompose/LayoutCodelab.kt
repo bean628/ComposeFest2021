@@ -1,6 +1,5 @@
 package kr.com.layoutsinjetpackcompose
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -49,8 +48,14 @@ fun LayoutsCodelab() {
 
 @Composable
 fun BodyContent(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(8.dp)) {
-        Text(text = "Hi there!")
-        Text(text = "Thanks for going through the Layouts codelab")
+//    Column(modifier = modifier.padding(8.dp)) {
+//        Text(text = "Hi there!")
+//        Text(text = "Thanks for going through the Layouts codelab")
+//    }
+    MyOwnColumn(modifier.padding(8.dp)) { // Layout을 이용한 커스텀 컴포저블
+        Text("MyOwnColumn")
+        Text("places items")
+        Text("vertically.")
+        Text("We've done it by hand!")
     }
 }
