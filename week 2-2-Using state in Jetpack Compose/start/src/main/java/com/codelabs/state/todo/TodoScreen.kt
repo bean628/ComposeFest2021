@@ -30,7 +30,9 @@ import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,6 +54,10 @@ fun TodoScreen(
     onRemoveItem: (TodoItem) -> Unit
 ) {
     Column {
+        TodoItemInputBackground(elevate = true, modifier = Modifier.fillMaxWidth()) {
+            TodoItemInput(onItemComplete = onAddItem)
+        }
+
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(top = 8.dp)
@@ -161,3 +167,69 @@ fun PreviewTodoRow() {
     val todo = remember { generateRandomTodoItem() }
     TodoRow(todo = todo, onItemClicked = {}, modifier = Modifier.fillMaxWidth())
 }
+
+
+/*
+경고: 이 텍스트 필드는 상태를 끌어올려야 할 때 호이스트하지 않습니다.
+      이 섹션의 뒷부분에서 우리는 이 기능을 제거할 것입니다.
+ */
+//@Composable
+//fun TodoInputTextField(modifier: Modifier) {
+//    val (text, setText) = remember { mutableStateOf("") }
+//    TodoInputText(text, setText, modifier)
+//}
+
+// TodoInputTextField with hoisted state!
+@Composable
+fun TodoInputTextField(text: String, onTextChange: (String) -> Unit, modifier: Modifier) {
+    TodoInputText(text, onTextChange, modifier)
+}
+
+
+/*
+MutableState object를 선언하는 3가지 방법
+
+val state = remember { mutableStateOf(default) }
+var value by remember { mutableStateOf(default) }
+val (value, setValue) = remember { mutableStateOf(default) }
+ */
+
+@Composable
+fun TodoItemInput(onItemComplete: (TodoItem) -> Unit) {
+
+    val (text, setText) = remember { mutableStateOf("") }
+
+    // onItemComplete is an event will fire when an item is completed by the user
+    Column {
+        Row(
+            Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp)
+        ) {
+            TodoInputTextField(
+                text = text,
+                onTextChange = setText,
+                Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+            )
+            TodoEditButton(
+                onClick = {
+                    onItemComplete(TodoItem(text)) // send onItemComplete event up
+                    setText("") // clear the internal text
+                },
+                text = "Add",
+                modifier = Modifier.align(Alignment.CenterVertically),
+                enabled = text.isNotBlank() // enable if text is not blank
+            )
+        }
+    }
+}
+
+
+@Preview
+@Composable
+fun PreviewTodoItemInput() = TodoItemInput(onItemComplete = { })
+
+
+
