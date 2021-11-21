@@ -47,16 +47,31 @@ class TodoActivity : AppCompatActivity() {
 @ExperimentalComposeUiApi
 @Composable
 private fun TodoActivityScreen(todoViewModel: TodoViewModel) {
-    /* todo아이템 observing, LiveData를 mutableState로 대체해서 제거함 */
+    /* todo아이템 observing, LiveData를 mutableState로 대체해서 제거하기 전  */
 //    val items: List<TodoItem> by todoViewModel.todoItems.observeAsState(listOf())
 //    TodoScreen(
 //        items = items,
 //        onAddItem = { todoViewModel.addItem(it) }, // onAddItem = todoViewModel::addItem, 메서드 참조 표현식도 가능
 //        onRemoveItem = { todoViewModel.removeItem(it) }
 //    )
+
+
+    /* todo아이템 observing, LiveData를 mutableState로 대체해서 제거함 */
+//    TodoScreen(
+//        items = todoViewModel.todoItems,
+//        onAddItem = todoViewModel::addItem,
+//        onRemoveItem = todoViewModel::removeItem
+//    )
+
+    /* pass state */
     TodoScreen(
         items = todoViewModel.todoItems,
+        currentlyEditing = todoViewModel.currentEditItem,
         onAddItem = todoViewModel::addItem,
-        onRemoveItem = todoViewModel::removeItem
+        onRemoveItem = todoViewModel::removeItem,
+        onStartEdit = todoViewModel::onEditItemSelected,
+        onEditItemChange = todoViewModel::onEditItemChange,
+        onEditDone = todoViewModel::onEditDone
     )
+
 }
