@@ -14,7 +14,8 @@ class MainActivity : ComponentActivity() {
             LayoutsInJetpackComposeTheme {
 //                PhotographerCard()
 //                ScrollingList()
-                LayoutsCodelab()
+//                LayoutsCodelab()
+                ConstraintLayoutContent()
             }
         }
     }
