@@ -17,10 +17,13 @@
 package com.example.android.codelab.animation
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.android.codelab.animation.ui.AnimationCodelabTheme
 import com.example.android.codelab.animation.ui.home.Home
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : ComponentActivity() {
 
@@ -31,5 +34,14 @@ class MainActivity : ComponentActivity() {
                 Home()
             }
         }
+
+        Log.i("test","0300신한카드".substring(0,4))
+        Log.i("test","0300신한카드".substring(4))
+        val now = System.currentTimeMillis()
+        val date = Date(now)
+        val curDateFormat = SimpleDateFormat("yyyy")
+        val currentYear = curDateFormat.format(date)
+
+        Log.i("test",currentYear.substring(0, 2))
     }
 }
