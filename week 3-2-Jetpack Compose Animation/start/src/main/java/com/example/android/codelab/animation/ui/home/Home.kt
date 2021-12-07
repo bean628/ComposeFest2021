@@ -619,8 +619,24 @@ private fun WeatherRow(
  */
 @Composable
 private fun LoadingRow() {
-    // TODO 5: Animate this value between 0f and 1f, then back to 0f repeatedly.
-    val alpha = 1f
+    // TODO 5: Animate this value between 0f and 1f, then back to 0f repeatedly.(완)
+//    val alpha = 1f
+    // Transition()은 상태 변경에 따라 값에 애니메이션을 적용하는 반면에
+    // InfiniteTransition()은 무기한 애니매이션을 적용함
+    val infiniteTransition = rememberInfiniteTransition()
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+                0.7f at 500
+            },
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+
     Row(
         modifier = Modifier
             .heightIn(min = 64.dp)
@@ -684,6 +700,9 @@ private fun Modifier.swipeToDismiss(
     onDismissed: () -> Unit
 ): Modifier = composed {
     // TODO 6-1: Create an Animatable instance for the offset of the swiped element.
+
+    val offsetX = remember { Animatable(0f) } // 제스처 애니매이션을 위해 추가
+
     pointerInput(Unit) {
         // Used to calculate a settling position of a fling animation.
         val decay = splineBasedDecay<Float>(this)
@@ -693,12 +712,21 @@ private fun Modifier.swipeToDismiss(
                 // Wait for a touch down event.
                 val pointerId = awaitPointerEventScope { awaitFirstDown().id }
                 // TODO 6-2: Touch detected; the animation should be stopped.
+                offsetX.stop() // 라인 추가
                 // Prepare for drag events and record velocity of a fling.
                 val velocityTracker = VelocityTracker()
                 // Wait for drag events.
                 awaitPointerEventScope {
                     horizontalDrag(pointerId) { change ->
                         // TODO 6-3: Apply the drag change to the Animatable offset.
+                        // Add these 4 lines
+                        val horizontalDragOffset = offsetX.value + change.positionChange().x
+                        launch {
+                            // 터치 이벤트의 위치를 애니매이션 값과 동기화하기 위해
+                            // snapTo 사용
+                            offsetX.snapTo(horizontalDragOffset)
+                        }
+
                         // Record the velocity of the drag.
                         velocityTracker.addPosition(change.uptimeMillis, change.position)
                         // Consume the gesture event, not passed to external
@@ -709,18 +737,49 @@ private fun Modifier.swipeToDismiss(
                 val velocity = velocityTracker.calculateVelocity().x
                 // TODO 6-4: Calculate the eventual position where the fling should settle
                 //           based on the current offset value and velocity
+                // 요소를 원래 위치로 다시 밀어야하는지 아니면 밀어서 콜백을 호출해야하는지를
+                // 계산하기 위해서 플링이 정착하는 최종 위치를 계산해야 합니다.
+                val targetOffsetX = decay.calculateTargetValue(offsetX.value, velocity) // Add this line
                 // TODO 6-5: Set the upper and lower bounds so that the animation stops when it
                 //           reaches the edge.
+                // 6-5에서는 애니메이션을 시작하려고 합니다.
+                // 그러나 그 전에 Animateable에 상한 및 하한 값 경계를 설정하여 도달하는
+                // 즉시 중지되도록 합니다. pointerInput 수정자를 사용하면 size 속성으로
+                // 요소의 크기에 액세스할 수 있으므로 이를 사용하여 경계를 얻습니다.
+                offsetX.updateBounds(
+                    lowerBound = -size.width.toFloat(),
+                    upperBound = size.width.toFloat()
+                )
                 launch {
                     // TODO 6-6: Slide back the element if the settling position does not go beyond
                     //           the size of the element. Remove the element if it does.
+
+                    // 6-6은 마침내 애니메이션을 시작할 수 있는 곳입니다.
+                    // 먼저 앞서 계산한 플링의 침강 위치와 요소의 크기를 비교합니다.
+                    // 침전 위치가 사이즈 이하이면 플링의 속도가 충분하지 않다는 의미입니다.
+                    // animateTo를 사용하여 값을 0f로 되돌릴 수 있습니다.
+                    // 그렇지 않으면, 우리는 플링 애니메이션을 시작하기 위해imateDecay를 사용합니다.
+                    // 애니메이션이 완료되면(대부분 이전에 설정한 경계만큼) 콜백을 호출할 수 있습니다.
+                    if (targetOffsetX.absoluteValue <= size.width) {
+                        // Not enough velocity; Slide back.
+                        offsetX.animateTo(targetValue = 0f, initialVelocity = velocity)
+                    } else {
+                        // Enough velocity to slide away the element to the edge.
+                        offsetX.animateDecay(velocity, decay)
+                        // The element was swiped away.
+                        onDismissed()
+                    }
+
                 }
             }
         }
     }
         .offset {
             // TODO 6-7: Use the animating offset value here.
-            IntOffset(0, 0)
+//            IntOffset(0, 0)
+            // 모든 애니메이션과 제스처가 설정되었으므로 요소에 오프셋을
+            // 적용하는 것을 잊지 마십시오.
+            IntOffset(offsetX.value.roundToInt(), 0)
         }
 }
 
