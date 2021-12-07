@@ -88,18 +88,32 @@ fun RallyApp() {
 
             }
         ) { innerPadding ->
-//            Box(Modifier.padding(innerPadding)) {
+            RallyNavHost(
+                navController = navController,
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+    }
+}
+
+@Composable
+fun RallyNavHost(
+    navController: NavHostController,
+    modifier: Modifier = Modifier
+) {
+    //            Box(Modifier.padding(innerPadding)) {
 //                currentScreen.content(
 //                    onScreenChange = { screen ->
 //                        currentScreen = RallyScreen.valueOf(screen)
 //                    }
 //                )
 //            }
-            NavHost( // Scaffold {} 안에서 NavHost로 대체
-                navController = navController,
-                startDestination = RallyScreen.Overview.name,
-                modifier = Modifier.padding(innerPadding)
-            ) {
+    NavHost( // Scaffold {} 안에서 NavHost로 대체
+        navController = navController,
+        startDestination = RallyScreen.Overview.name,
+//        modifier = Modifier.padding(innerPadding)
+        modifier = modifier
+    ) {
 //                composable(RallyScreen.Overview.name) {
 //                    Text(RallyScreen.Overview.name)
 //                }
@@ -109,46 +123,46 @@ fun RallyApp() {
 //                composable(RallyScreen.Bills.name) {
 //                    Text(RallyScreen.Bills.name)
 //                }
-                composable(RallyScreen.Overview.name) {
-                    OverviewBody(
-                        onClickSeeAllAccounts = { navController.navigate(RallyScreen.Accounts.name) }, // 클릭 동작 추가
-                        onClickSeeAllBills = { navController.navigate(RallyScreen.Bills.name) }, // 클릭 동작 추가
-                        onAccountClick = { name ->
-                            navigateToSingleAccount(navController, name)
-                        },
-                    )
-                }
-                composable(RallyScreen.Accounts.name) {
-                    AccountsBody(accounts = UserData.accounts)
-                }
-                composable(RallyScreen.Bills.name) {
-                    BillsBody(bills = UserData.bills)
-                }
-
-                // arguments를 이용해서 네비게이션 활용하는 방법!
-                val accountsName = RallyScreen.Accounts.name
-                composable(
-                    //  {argument}와 같이 중괄호로 묶인 경로 내부에 제공됩니다.
-                    //  변수 이름을 이스케이프하기 위해 달러 기호 $를 사용하는
-                    //  Kotlin의 문자열 템플릿 구문과 유사한 구문입니다.
-                    route = "$accountsName/{name}",
-                    arguments = listOf(
-                        navArgument("name") {
-                            // Make argument type safe
-                            type = NavType.StringType
-                        }
-                    ),
-                    deepLinks =  listOf(navDeepLink {
-                        uriPattern = "rally://$accountsName/{name}"
-                    })
-                ) { entry -> // Look up "name" in NavBackStackEntry's arguments
-                    val accountName = entry.arguments?.getString("name")
-                    // Find first name match in UserData
-                    val account = UserData.getAccount(accountName)
-                    // Pass account to SingleAccountBody
-                    SingleAccountBody(account = account)
-                }
+        composable(RallyScreen.Overview.name) {
+            OverviewBody(
+                onClickSeeAllAccounts = { navController.navigate(RallyScreen.Accounts.name) }, // 클릭 동작 추가
+                onClickSeeAllBills = { navController.navigate(RallyScreen.Bills.name) }, // 클릭 동작 추가
+                onAccountClick = { name ->
+                    navigateToSingleAccount(navController, name)
+                },
+            )
+        }
+        composable(RallyScreen.Accounts.name) {
+            AccountsBody(accounts = UserData.accounts) { name ->
+                navController.navigate("Accounts/${name}")
             }
+        }
+        composable(RallyScreen.Bills.name) {
+            BillsBody(bills = UserData.bills)
+        }
+
+        // arguments를 이용해서 네비게이션 활용하는 방법!
+        val accountsName = RallyScreen.Accounts.name
+        composable(
+            //  {argument}와 같이 중괄호로 묶인 경로 내부에 제공됩니다.
+            //  변수 이름을 이스케이프하기 위해 달러 기호 $를 사용하는
+            //  Kotlin의 문자열 템플릿 구문과 유사한 구문입니다.
+            route = "$accountsName/{name}",
+            arguments = listOf(
+                navArgument("name") {
+                    // Make argument type safe
+                    type = NavType.StringType
+                }
+            ),
+            deepLinks =  listOf(navDeepLink {
+                uriPattern = "rally://$accountsName/{name}"
+            })
+        ) { entry -> // Look up "name" in NavBackStackEntry's arguments
+            val accountName = entry.arguments?.getString("name")
+            // Find first name match in UserData
+            val account = UserData.getAccount(accountName)
+            // Pass account to SingleAccountBody
+            SingleAccountBody(account = account)
         }
     }
 }
