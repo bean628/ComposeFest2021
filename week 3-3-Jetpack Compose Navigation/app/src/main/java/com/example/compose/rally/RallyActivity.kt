@@ -29,12 +29,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.compose.rally.data.UserData
 import com.example.compose.rally.ui.accounts.AccountsBody
+import com.example.compose.rally.ui.accounts.SingleAccountBody
 import com.example.compose.rally.ui.bills.BillsBody
 import com.example.compose.rally.ui.components.RallyTabRow
 import com.example.compose.rally.ui.overview.OverviewBody
@@ -107,7 +111,10 @@ fun RallyApp() {
                 composable(RallyScreen.Overview.name) {
                     OverviewBody(
                         onClickSeeAllAccounts = { navController.navigate(RallyScreen.Accounts.name) }, // 클릭 동작 추가
-                        onClickSeeAllBills = { navController.navigate(RallyScreen.Bills.name) } // 클릭 동작 추가
+                        onClickSeeAllBills = { navController.navigate(RallyScreen.Bills.name) }, // 클릭 동작 추가
+                        onAccountClick = { name ->
+                            navigateToSingleAccount(navController, name)
+                        },
                     )
                 }
                 composable(RallyScreen.Accounts.name) {
@@ -117,8 +124,35 @@ fun RallyApp() {
                     BillsBody(bills = UserData.bills)
                 }
 
-
+                // arguments를 이용해서 네비게이션 활용하는 방법!
+                val accountsName = RallyScreen.Accounts.name
+                composable(
+                    //  {argument}와 같이 중괄호로 묶인 경로 내부에 제공됩니다.
+                    //  변수 이름을 이스케이프하기 위해 달러 기호 $를 사용하는
+                    //  Kotlin의 문자열 템플릿 구문과 유사한 구문입니다.
+                    route = "$accountsName/{name}",
+                    arguments = listOf(
+                        navArgument("name") {
+                            // Make argument type safe
+                            type = NavType.StringType
+                        }
+                    )
+                ) { entry -> // Look up "name" in NavBackStackEntry's arguments
+                    val accountName = entry.arguments?.getString("name")
+                    // Find first name match in UserData
+                    val account = UserData.getAccount(accountName)
+                    // Pass account to SingleAccountBody
+                    SingleAccountBody(account = account)
+                }
             }
         }
     }
+}
+
+
+private fun navigateToSingleAccount(
+    navController: NavHostController,
+    accountName: String
+) {
+    navController.navigate("${RallyScreen.Accounts.name}/$accountName")
 }
