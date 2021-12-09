@@ -111,7 +111,8 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.espressoVersion"
 
     // Compose testing dependencies
+    // Compose 테스트를 활성화하는 데 필요한 관련 모듈
     androidTestImplementation "androidx.compose.ui:ui-test:$rootProject.composeVersion"
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$rootProject.composeVersion"
-    debugImplementation "androidx.compose.ui:ui-test-manifest:$rootProject.composeVersion"
+        debugImplementation "androidx.compose.ui:ui-test-manifest:$rootProject.composeVersion"
 }
