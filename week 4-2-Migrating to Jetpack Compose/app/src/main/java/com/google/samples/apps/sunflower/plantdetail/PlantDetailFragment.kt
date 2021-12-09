@@ -22,6 +22,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.material.MaterialTheme
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ShareCompat
 import androidx.core.widget.NestedScrollView
@@ -30,6 +31,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.samples.apps.sunflower.R
@@ -105,17 +107,43 @@ class PlantDetailFragment : Fragment() {
                         true
                     }
                     else -> false
-               }
+                }
             }
 
             // ComposeView에 컴포즈 코드를 호스팅할 수 있음
-            composeView.setContent {
-                // You're in Compose world!
-                MaterialTheme {
+//            composeView.setContent {
+//                // You're in Compose world!
+//                MaterialTheme {
 //                    PlantDetailDescription()
-                    PlantDetailDescription(plantDetailViewModel = plantDetailViewModel)
+//                    PlantDetailDescription(plantDetailViewModel = plantDetailViewModel)
+//                }
+//            }
+
+            // (중요)
+            // 컴포지션은 Compose UI 보기 유형이 상태를 저장하기 위해 프래그먼트의 보기 수명 주기를
+            // 따라야 합니다. 전환 또는 창 전환이 발생할 때 Compose UI 요소를 화면에 유지합니다.
+            // 전환하는 동안 ComposeView 자체는 창에서 분리된 후에도 계속 표시됩니다.
+            composeView.apply {
+                // Dispose the Composition when the view's LifecycleOwner
+                // is destroyed
+                setViewCompositionStrategy(
+                    ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+                )
+                setContent {
+//                    MaterialTheme {
+//                        PlantDetailDescription(plantDetailViewModel = plantDetailViewModel)
+//                    }
+                    // To use this, replace MaterialTheme usages for MdcTheme. For example, in PlantDetailFragment:
+                    // "com.google.android.material:compose-theme-adapter"
+                    // MdcTheme 함수는 호스트 컨텍스트의 MDC 테마를 자동으로 읽고
+                    // 밝은 테마와 어두운 테마 모두에 대해 사용자를 대신하여 MaterialTheme에 전달합니다.
+                    MdcTheme {
+                        PlantDetailDescription(plantDetailViewModel = plantDetailViewModel)
+                    }
+
                 }
             }
+
 
         }
         setHasOptionsMenu(true)

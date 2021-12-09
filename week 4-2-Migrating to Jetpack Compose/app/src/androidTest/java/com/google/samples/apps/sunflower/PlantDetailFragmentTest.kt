@@ -20,6 +20,9 @@ import android.accessibilityservice.AccessibilityService
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.navigation.Navigation.findNavController
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -48,18 +51,41 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class PlantDetailFragmentTest {
 
-    @Rule
-    @JvmField
-    val activityTestRule = ActivityScenarioRule(GardenActivity::class.java)
-
     // Note that keeping these references is only safe if the activity is not recreated.
     private lateinit var activity: ComponentActivity
+
+    // =====컴포즈 테스트로 대체 BEGIN========
+//    @Rule
+//    @JvmField
+//    val activityTestRule = ActivityScenarioRule(GardenActivity::class.java)
+
+//    @Before
+//    fun jumpToPlantDetailFragment() {
+//        populateDatabase()
+//
+//        activityTestRule.scenario.onActivity { gardenActivity ->
+//            activity = gardenActivity
+//
+//            val bundle = Bundle().apply { putString("plantId", "malus-pumila") }
+//            findNavController(activity, R.id.nav_host).navigate(R.id.plant_detail_fragment, bundle)
+//        }
+//    }
+
+//    @Test
+//    fun testPlantName() {
+//        onView(ViewMatchers.withText("Apple"))
+//            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+//    }
+
+    @Rule
+    @JvmField
+    val composeTestRule = createAndroidComposeRule<GardenActivity>()
 
     @Before
     fun jumpToPlantDetailFragment() {
         populateDatabase()
 
-        activityTestRule.scenario.onActivity { gardenActivity ->
+        composeTestRule.activityRule.scenario.onActivity { gardenActivity ->
             activity = gardenActivity
 
             val bundle = Bundle().apply { putString("plantId", "malus-pumila") }
@@ -68,10 +94,12 @@ class PlantDetailFragmentTest {
     }
 
     @Test
-    fun testPlantName() {
-        onView(ViewMatchers.withText("Apple"))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+    fun testPlantName() { // 컴포즈 테스트 해보기
+        composeTestRule.onNodeWithText("Apple").assertIsDisplayed()
     }
+
+    // =======컴포즈 테스트로 대체 END==========
+
 
     @Test
     fun testShareTextIntent() {

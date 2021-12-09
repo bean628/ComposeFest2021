@@ -92,6 +92,7 @@ dependencies {
     implementation "androidx.compose.runtime:runtime-livedata:$rootProject.composeVersion"
     implementation "androidx.compose.ui:ui-tooling:$rootProject.composeVersion"
 
+    // Compose에서 View 시스템 MDC 테마를 재사용하려면 compose-theme-adapter를 사용할 수 있습니다
     implementation "com.google.android.material:compose-theme-adapter:$rootProject.materialComposeAdapterVersion"
 
     // Testing dependencies

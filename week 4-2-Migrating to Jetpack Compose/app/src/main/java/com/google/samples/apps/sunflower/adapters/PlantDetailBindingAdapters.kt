@@ -49,6 +49,7 @@ fun bindIsGone(view: FloatingActionButton, isGone: Boolean?) {
 @BindingAdapter("renderHtml")
 fun bindRenderHtml(view: TextView, description: String?) {
     if (description != null) {
+        // Compose는 아직 HTML 코드를 렌더링할 수 없기 때문에 AndroidView API를 사용하여 정확히 이를 수행하도록 프로그래밍 방식으로 TextView를 생성합니다.
         view.text = HtmlCompat.fromHtml(description, FROM_HTML_MODE_COMPACT)
         view.movementMethod = LinkMovementMethod.getInstance()
     } else {
